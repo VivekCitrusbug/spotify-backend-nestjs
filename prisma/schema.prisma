@@ -13,19 +13,28 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
-model Employee{
-  id Int @default(autoincrement()) @id
-  name String 
-  email String @unique
-  role Role @default(user)
-  password String
+model Employee {
+  id         Int      @id @default(autoincrement())
+  name       String
+  email      String   @unique
+  role       Role     @default(user)
+  password   String
   created_at DateTime @default(now())
+  song       Song[]
 }
 
-
-enum Role{
+enum Role {
   user
   admin
   doctor
+}
+
+//song model:
+model Song {
+  id          Int      @id @default(autoincrement())
+  title       String   @unique
+  employeeId  Int
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  releaseDate DateTime @default(now())
+  duration    DateTime
 }

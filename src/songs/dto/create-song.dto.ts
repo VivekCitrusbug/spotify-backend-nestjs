@@ -16,7 +16,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class CreateSong {
+export class CreateSongDto {
   @IsString()
   @IsNotEmpty({ message: 'Title cannot be empty' })
   @MaxLength(100, { message: 'Title must not exceed 100 characters' })
