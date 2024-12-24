@@ -32,9 +32,9 @@ export class CreateSongDto {
 
   @IsNotEmpty({ message: 'Release date cannot be empty' })
   @IsDateString()
-  releaseDate: Date;   //2020-09-28
+  releaseDate: Date; //2020-09-28
 
   @IsMilitaryTime()
-  @IsNotEmpty({ message: 'duration cannot be empty' }) 
-  duration: Date;  //02:30
+  @IsNotEmpty({ message: 'duration cannot be empty' })
+  duration: Date; //02:30
 }

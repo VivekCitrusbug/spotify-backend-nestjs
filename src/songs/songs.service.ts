@@ -19,7 +19,7 @@ export class SongsService {
     });
     if (duplicate) throw new ApiError(409, 'title already registered!!!');
     const song = await this.prisma.song.create({
-      data: data,
+     data
     });
 
     if (!song) throw new ApiError(500, 'Failed to crate new song!!!');

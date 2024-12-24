@@ -7,7 +7,7 @@ import {
   IsEnum,
 } from 'class-validator';
 
-export class CreateEmployeeDto {
+export class CreateUserDto {
   @IsString()
   @MinLength(1, { message: 'Name must have at least one character.' })
   @MaxLength(50, { message: 'Name must not exceed 50 characters.' })

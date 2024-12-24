@@ -6,14 +6,15 @@ import {
 } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { EmployeeModule } from './employee/employee.module';
+import { UserModule } from './employee/user.module';
 import { DatabaseModule } from './database/database.module';
 import { CommonModule } from './common/common.module';
 import { LoggerMiddleware } from './common/middleware/logger/logger.middleware';
-import { EmployeeController } from './employee/employee.controller';
+import { UserController } from './employee/user.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
-  imports: [EmployeeModule, DatabaseModule, CommonModule],
+  imports: [UserModule, DatabaseModule, CommonModule],
   controllers: [AppController],
   providers: [AppService],
 })
@@ -25,6 +26,6 @@ export class AppModule implements NestModule {
     //   .apply(LoggerMiddleware)
     //   .forRoutes({ path: 'employee', method: RequestMethod.POST });  option 2
 
-    consumer.apply(LoggerMiddleware).forRoutes(EmployeeController);
+    consumer.apply(LoggerMiddleware).forRoutes(UserController);
   }
 }
