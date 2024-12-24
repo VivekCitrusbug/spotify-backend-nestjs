@@ -1,68 +1,47 @@
 import { Injectable } from '@nestjs/common';
-import { DatabaseService } from 'src/database/database.service';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { UserEntity } from 'src/entity/user.entity';
+import { SongEntity } from 'src/entity/song.entity';
 import { CreateSongDto } from './dto/create-song.dto';
 import { ApiError } from 'src/common/errors/ApiError';
-import { updateSongDto } from './dto/update-song.dto';
-
+import { DeepPartial } from 'typeorm';
 @Injectable()
 export class SongsService {
+  constructor(
+    @InjectRepository(SongEntity)
+    private readonly songRepository: Repository<SongEntity>,
+  ) {}
 
-    constructor(private readonly prisma: DatabaseService) {}
-
-  //create new user:
+  //createUser:
   async createSong(data: CreateSongDto) {
-    //check duplicate user with same email:
-    const duplicate = await this.prisma.song.findUnique({
-      where: {
-        title: data.title,
-      },
-    });
-    if (duplicate) throw new ApiError(409, 'title already registered!!!');
-    const song = await this.prisma.song.create({
-     data
-    });
+    try {
+      // Validate email uniqueness
+      const existingSong = await this.songRepository.findOne({
+        where: { title: data.title },
+      });
+      if (existingSong) {
+        throw new ApiError(400, 'song already exists');
+      }
 
-    if (!song) throw new ApiError(500, 'Failed to crate new song!!!');
-
-    return song;
+      const newSong = this.songRepository.create(
+        data as DeepPartial<SongEntity>,
+      ); // Create a new User instance
+      return await this.songRepository.save(newSong); // Save the User in the database
+    } catch (error) {
+      // Throw an ApiError with additional context if necessary
+      throw new ApiError(error.statusCode, error.message);    }
   }
-
-  //get all user registered:
-  async getAll() {
-    const data = await this.prisma.song.findMany();
-    if (!data.length) throw new ApiError(404, 'song not found!!!');
-    return data;
+  //getAllUsers
+  // Get all users with their songs
+  async getAllSong(): Promise<SongEntity[]> {
+    try {
+      return await this.songRepository.find({ relations: ['user'] }); // Fetch users and their related songs
+    } catch (error) {
+      throw new ApiError(error.statusCode, error.message);    }
   }
-
-  //deleteEmployee
-  async deleteSong(id) {
-    const data = await this.prisma.song.findUnique({
-      where: {
-        id,
-      },
-    });
-    if (!data)
-      throw new ApiError(404, 'song not found or deleted already.!!!');
-    await this.prisma.song.delete({
-      where: { id },
-    });
-    return data;
-  }
-
-  //updateEmployee
-  async updateSong(id: number, data: updateSongDto) {
-    const song = await this.prisma.song.findUnique({
-      where: {
-        id,
-      },
-    });
-    if (!data) throw new ApiError(404, 'song not found!!!');
-    const newData = await this.prisma.song.update({
-      where: { id },
-      data: data,
-    });
-
-    return newData;
-  }
-
+  //updateUser
+  async updateUser() {}
+  //deleteUser
+  async deleteUser() {}
 }

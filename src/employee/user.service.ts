@@ -1,67 +1,73 @@
-/**
- * below the code is used as service when using prisma orm not Typeor
- */
 import { Injectable } from '@nestjs/common';
-import { DatabaseService } from 'src/database/database.service';
+import { DeepPartial, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { UserEntity } from 'src/entity/user.entity';
+import { SongEntity } from 'src/entity/song.entity';
 import { CreateUserDto } from './dto/create-user.dto';
-import { updateUserDto } from './dto/update-user.dto';
 import { ApiError } from 'src/common/errors/ApiError';
+import { updateSongDto } from 'src/songs/dto/update-song.dto';
+import { updateUserDto } from './dto/update-user.dto';
+
 @Injectable()
 export class UserService {
-  constructor(private readonly prisma: DatabaseService) {}
+  constructor(
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
+  ) {}
 
-  //create new user:
+  //createUser:
   async createUser(data: CreateUserDto) {
-    //check duplicate user with same email:
-    const duplicate = await this.prisma.user.findUnique({
-      where: {
-        email: data.email,
-      },
-    });
-    if (duplicate) throw new ApiError(409, 'email already registered!!!');
-    const user = await this.prisma.user.create({
-      data: data,
-    });
+    try {
+      // Validate email uniqueness
+      const existingUser = await this.userRepository.findOne({
+        where: { email: data.email },
+      });
+      if (existingUser) {
+        throw new ApiError(400, 'Email already exists');
+      }
 
-    if (!user) throw new ApiError(500, 'Failed to crate new user!!!');
-
-    return user;
+      const newUser = this.userRepository.create(
+        data as DeepPartial<UserEntity>,
+      ); // Create a new User instance
+      return await this.userRepository.save(newUser); // Save the User in the database
+    } catch (error) {
+      // Throw an ApiError with additional context if necessary
+      throw new ApiError(error.statusCode, error.message);
+    }
   }
-
-  //get all user registered:
-  async getAll() {
-    const data = await this.prisma.user.findMany();
-    if (!data.length) throw new ApiError(404, 'user not found!!!');
-    return data;
+  //getAllUsers
+  // Get all users with their songs
+  async getAllUsers(): Promise<UserEntity[]> {
+    try {
+      const data = await this.userRepository.find({ relations: ['songs'] }); // Fetch users and their related songs
+      if (!data.length) throw new ApiError(404, 'user not found!!!');
+      return data;
+    } catch (error) {
+      throw new ApiError(error.statusCode, error.message);
+    }
   }
-
-  //deleteEmployee
-  async deleteUser(id) {
-    const data = await this.prisma.user.findUnique({
-      where: {
-        id,
-      },
-    });
-    if (!data) throw new ApiError(404, 'user not found or deleted already.!!!');
-    await this.prisma.user.delete({
-      where: { id },
-    });
-    return data;
-  }
-
-  //updateEmployee
+  // updateUser
   async updateUser(id: number, data: updateUserDto) {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        id,
-      },
-    });
-    if (!data) throw new ApiError(404, 'user not found!!!');
-    const newData = await this.prisma.user.update({
-      where: { id },
-      data: data,
-    });
+    try {
+      const existsUser = await this.userRepository.findOneBy({ id });
+      if (!existsUser) throw new ApiError(404, 'user not found!!!');
+      await this.userRepository.update(id, data as DeepPartial<UserEntity>);
+      return await this.userRepository.findOneBy({ id });
+    } catch (error) {
+      throw new ApiError(error.statusCode, error.message);
+    }
+  }
 
-    return newData;
+  //deleteUser
+  async deleteUser(id: number) {
+    try {
+      const existsUser = await this.userRepository.findOneBy({ id });
+      if (!existsUser) throw new ApiError(404, 'User not found');
+      await this.userRepository.delete(id);
+
+      return existsUser;
+    } catch (error) {
+      throw new ApiError(error.statusCode, error.message);
+    }
   }
 }

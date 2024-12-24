@@ -5,7 +5,10 @@ import {
   MaxLength,
   Matches,
   IsEnum,
+  IsOptional,
 } from 'class-validator';
+import { Role } from '@prisma/client';
+import { DeepPartial } from 'typeorm';
 
 export class CreateUserDto {
   @IsString()
@@ -20,10 +23,11 @@ export class CreateUserDto {
   @IsEmail({}, { message: 'Invalid email format.' })
   email: string;
 
-  @IsEnum(['user', 'admin', 'doctor'], {
+  @IsEnum(Role, {
     message: 'Role must be either user, admin, or doctor.',
   })
-  role: 'user' | 'admin' | 'doctor';
+  @IsOptional() // The role is optional and defaults to 'user'
+  role: DeepPartial<Role>;
 
   @IsString()
   @MinLength(6, { message: 'Password must be at least 6 characters long.' })
